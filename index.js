@@ -31,9 +31,11 @@ function updateUser(id_user, username, first, last){
         if (err) throw err;
 
         // ? New User ?
-        if (!result.length){
-            db.query("INSERT INTO Users ( ID, username, first_name, last_name) VALUES ( ?, ?, ?, ?, 0 )", [ id_user, username, first, last ], (err, result) => {
-              if (!err)
+        if ( result.length == 0 ){
+            db.query("INSERT INTO Users ( ID, username, first_name, last_name, Banned) VALUES ( ?, ?, ?, ?, 0 )", [ id_user, username, first, last ], (err, result) => {
+              if (err)
+                console.log(err);
+              else
                 console.log("[MYSQL] New User detected - " + first + " @" + username );
             });
         }
@@ -41,7 +43,9 @@ function updateUser(id_user, username, first, last){
         // ? Username has changed ?
         else if ( result[0].username != username || result[0].first_name != first || result[0].last_name != last) {
             db.query("UPDATE Users SET username = ? , first_name = ?, last_name = ? WHERE ID LIKE ?", [username, first, last, id_user] , (err, result) => {
-              if (!err)
+              if (err)
+                console.log(err);
+              else
                 console.log("[MYSQL] Username of " + first + " - " + id_user + " changed to @" + username );
             });
         }
@@ -143,6 +147,8 @@ nand.command("/roll", (ctx) => {
   }
 });
 
+// 
+
 nand.command("/rank", (ctx) => {
     try{
         db.query("SELECT m.ID_User_From as ID, SUM(u.Vote) as karma, users.username, users.first_name, users.last_name FROM Upvotes u LEFT JOIN Messages m ON m.ID = u.ID_Message LEFT JOIN Users users on users.ID = m.ID_User_From GROUP BY m.ID_User_From ORDER BY karma DESC LIMIT 25;", (err, result) => {
@@ -173,6 +179,31 @@ nand.command("/rank", (ctx) => {
     }
 });
 
+nand.command("/qkarma", (ctx) => {
+
+  var from = ctx.message.reply_to_message ? ctx.message.reply_to_message.from : ctx.from;
+
+  updateUser(from.id, from.username, from.first_name, from.last_name);
+
+  try {
+    db.query("SELECT u.ID_User as ID, SUM(u.Vote) as karma FROM Upvotes u LEFT JOIN Messages m ON m.ID = u.ID_Message WHERE m.ID_User_From = ? GROUP BY u.ID_User;", [from.id] ,(err, result) => { 
+        if(err)
+            throw err;
+        var karma = result.reduce((prev, curr) => prev + Math.sign(curr.karma) * Math.sqrt(Math.abs(curr.karma)), 0);
+        // karma ^ 2 mantaining the sign
+        var karma = Math.round( Math.sign(karma) * (karma**2) );
+        if ( ctx.message.reply_to_message ){
+            var s = ctx.message.reply_to_message.from.username ? "@" + ctx.message.reply_to_message.from.username : ctx.message.reply_to_message.from.first_name ;
+            ctx.reply(s + " Quadratic Karma: " + karma, { reply_to_message_id : ctx.message.message_id } );
+        } else
+            ctx.replyWithMarkdown("*Quadratic Karma* : " + karma, { reply_to_message_id : ctx.message.message_id } );
+        console.log("[KARMA] Hey @" + ctx.from.username + " Quadratic Karma : " + karma);
+    });
+  } catch {
+    console.log(err);
+  }
+});
+
 nand.command("/karma", (ctx) => {
 
   var from = ctx.message.reply_to_message ? ctx.message.reply_to_message.from : ctx.from;
@@ -197,6 +228,7 @@ nand.command("/karma", (ctx) => {
 
 nand.on("text", (ctx) => {
 
+  console.log("[TEXT] " + ctx.from.id + " " + ctx.from.username + " " + ctx.from.first_name  + " " + ctx.from.last_name);
   updateUser(ctx.from.id, ctx.from.username, ctx.from.first_name, ctx.from.last_name);
 
   isBanned(ctx.from.id, (b) => {
