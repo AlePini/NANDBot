@@ -3,7 +3,7 @@
 NAND
 
 ## NAND Install
-Follow these step
+Follow these steps
 
 I came, I saw, I came, I saw
 I praise the Lord, then break the law
@@ -22,7 +22,7 @@ You also need a config file
 ### nand.ini
 ```
 [Nand]
-token = toekn
+token = token
 chatid = chatid
 groupid = groupid
 
