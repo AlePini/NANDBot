@@ -96,24 +96,12 @@ function vote(id_user, id_message, id_message_from, date, vote){
 
 }
 
-var submit = function submit(){
-
-  setTimeout(submit, 30000);
-
-}
 
 // _ Setup Telegram Bot
 var lock = new AsyncLock();
 var conf = ini.decode(fs.readFileSync('./nand.ini', 'utf-8'));
 var nand = new telegraf(conf.Nand.token);
 nand.use(commandParts());
-
-/*
-nand.command("/money", (ctx) => {
- if(ctx.message.chat.id == conf.Nand.groupid)
-   ctx.reply("Ci vediamo in facoltà");
-});
-*/
 
 nand.command("/davoli", (ctx) => {
   var max = 100;
@@ -160,8 +148,6 @@ nand.command("/roll", (ctx) => {
     }
   }
 });
-
-// 
 
 nand.command("/rank", (ctx) => {
     try{
