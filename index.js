@@ -194,7 +194,7 @@ nand.command("/qkarma", (ctx) => {
         var karma = Math.round( Math.sign(karma) * (karma**2) );
         if ( ctx.message.reply_to_message ){
             var s = ctx.message.reply_to_message.from.username ? "@" + ctx.message.reply_to_message.from.username : ctx.message.reply_to_message.from.first_name ;
-            ctx.reply(s + " Quadratic Karma: " + karma, { reply_to_message_id : ctx.message.message_id } );
+            ctx.reply(s + " Quadratic Karma : " + karma, { reply_to_message_id : ctx.message.message_id } );
         } else
             ctx.replyWithMarkdown("*Quadratic Karma* : " + karma, { reply_to_message_id : ctx.message.message_id } );
         console.log("[KARMA] Hey @" + ctx.from.username + " Quadratic Karma : " + karma);
