@@ -115,6 +115,20 @@ nand.command("/money", (ctx) => {
 });
 */
 
+nand.command("/davoli", (ctx) => {
+  var max = 100;
+  var i =  Math.floor(Math.random() * max);
+  console.log("[DAVOLI] Roulette : " + i + " for " + ctx.from.id + " in " + ctx.chat.id);
+
+  if ( i == 0 ){
+    ctx.telegram.kickChatMember(ctx.message.chat.id, ctx.from.id);
+    ctx.replyWithMarkdown("Ahah sfigato");
+    console.log("[DAVOLI] LMAO Get Kicked");
+  } else {
+    ctx.replyWithMarkdown("Lucky 😉");
+  }
+
+});
 
 nand.command("/roll", (ctx) => {
   if(ctx.message.chat.id == conf.Nand.chatid){
