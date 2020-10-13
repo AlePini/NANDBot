@@ -5,10 +5,14 @@ var telegraf = require('telegraf');
 var commandParts = require('telegraf-command-parts');
 var AsyncLock = require('async-lock');
 
-
 function getExtension(filename) {
   var i = filename.lastIndexOf('.');
   return (i < 0) ? '' : filename.substr(i);
+}
+
+function randDavoli(){
+  var max = 100;
+  return Math.floor(Math.random() * max);
 }
 
 function isBanned(id, callback){
@@ -98,22 +102,24 @@ function vote(id_user, id_message, id_message_from, date, vote){
 
 
 // _ Setup Telegram Bot
+var davoli = randDavoli();
 var lock = new AsyncLock();
 var conf = ini.decode(fs.readFileSync('./nand.ini', 'utf-8'));
 var nand = new telegraf(conf.Nand.token);
 nand.use(commandParts());
 
 nand.command("/davoli", (ctx) => {
-  var max = 100;
-  var i =  Math.floor(Math.random() * max);
-  console.log("[DAVOLI] Roulette : " + i + " for " + ctx.from.id + " in " + ctx.chat.id);
 
-  if ( i == 0 ){
+  console.log("[DAVOLI] Roulette : " + davoli + " for " + ctx.from.id + " in " + ctx.chat.id);
+
+  if ( davoli <= 0 ){
     ctx.telegram.kickChatMember(ctx.message.chat.id, ctx.from.id);
     ctx.replyWithMarkdown("Ahah sfigato");
     console.log("[DAVOLI] LMAO Get Kicked");
+    davoli = randDavoli();
   } else {
     ctx.replyWithMarkdown("Lucky 😉");
+    davoli--;
   }
 
 });
