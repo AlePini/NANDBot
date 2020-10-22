@@ -155,6 +155,8 @@ nand.command("/roll", (ctx) => {
   }
 });
 
+// 
+
 nand.command("/rank", (ctx) => {
     try{
         db.query("SELECT m.ID_User_From as ID, SUM(u.Vote) as karma, users.username, users.first_name, users.last_name FROM Upvotes u LEFT JOIN Messages m ON m.ID = u.ID_Message LEFT JOIN Users users on users.ID = m.ID_User_From GROUP BY m.ID_User_From ORDER BY karma DESC LIMIT 25;", (err, result) => {
