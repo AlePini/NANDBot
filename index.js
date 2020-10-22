@@ -5,10 +5,14 @@ var telegraf = require('telegraf');
 var commandParts = require('telegraf-command-parts');
 var AsyncLock = require('async-lock');
 
-
 function getExtension(filename) {
   var i = filename.lastIndexOf('.');
   return (i < 0) ? '' : filename.substr(i);
+}
+
+function randDavoli(){
+  var max = 100;
+  return Math.floor(Math.random() * max);
 }
 
 function isBanned(id, callback){
@@ -96,25 +100,29 @@ function vote(id_user, id_message, id_message_from, date, vote){
 
 }
 
-var submit = function submit(){
-
-  setTimeout(submit, 30000);
-
-}
 
 // _ Setup Telegram Bot
+var davoli = randDavoli();
 var lock = new AsyncLock();
 var conf = ini.decode(fs.readFileSync('./nand.ini', 'utf-8'));
 var nand = new telegraf(conf.Nand.token);
 nand.use(commandParts());
 
-/*
-nand.command("/money", (ctx) => {
- if(ctx.message.chat.id == conf.Nand.groupid)
-   ctx.reply("Ci vediamo in facoltà");
-});
-*/
+nand.command("/davoli", (ctx) => {
 
+  console.log("[DAVOLI] Roulette : " + davoli + " for " + ctx.from.id + " in " + ctx.chat.id);
+
+  if ( davoli <= 0 ){
+    ctx.telegram.kickChatMember(ctx.message.chat.id, ctx.from.id);
+    ctx.replyWithMarkdown("Ahah sfigato");
+    console.log("[DAVOLI] LMAO Get Kicked");
+    davoli = randDavoli();
+  } else {
+    ctx.replyWithMarkdown("Lucky 😉");
+    davoli--;
+  }
+
+});
 
 nand.command("/roll", (ctx) => {
   if(ctx.message.chat.id == conf.Nand.chatid){
@@ -189,10 +197,12 @@ nand.command("/qkarma", (ctx) => {
     db.query("SELECT u.ID_User as ID, SUM(u.Vote) as karma FROM Upvotes u LEFT JOIN Messages m ON m.ID = u.ID_Message WHERE m.ID_User_From = ? GROUP BY u.ID_User;", [from.id] ,(err, result) => { 
         if(err)
             throw err;
-        var karma = Math.floor(result.reduce((prev, curr) => prev + Math.sqrt(curr.karma), 0));
+        var karma = result.reduce((prev, curr) => prev + Math.sign(curr.karma) * Math.sqrt(Math.abs(curr.karma)), 0);
+        // karma ^ 2 mantaining the sign
+        var karma = Math.round( Math.sign(karma) * (karma**2) );
         if ( ctx.message.reply_to_message ){
             var s = ctx.message.reply_to_message.from.username ? "@" + ctx.message.reply_to_message.from.username : ctx.message.reply_to_message.from.first_name ;
-            ctx.reply(s + " Quadratic Karma: " + karma, { reply_to_message_id : ctx.message.message_id } );
+            ctx.reply(s + " Quadratic Karma : " + karma, { reply_to_message_id : ctx.message.message_id } );
         } else
             ctx.replyWithMarkdown("*Quadratic Karma* : " + karma, { reply_to_message_id : ctx.message.message_id } );
         console.log("[KARMA] Hey @" + ctx.from.username + " Quadratic Karma : " + karma);
